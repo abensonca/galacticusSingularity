@@ -19,7 +19,7 @@ From: fedora:27
     exec /bin/bash "$@"	
 
 %post
-    yum -y install which file emacs xterm wget findutils patch mercurial git svn bzip2 gcc gcc-c++ zlib-devel perl make m4 libcurl libcurl-devel libtiff libtiff-devel install lapack perl-CPAN perl-XML-Simple perl-XML-SAX perl-Text-Table perl-Regexp-Common perl-Clone perl-Sys-CPU
+    yum -y install which file emacs xterm wget findutils patch mercurial git svn bzip2 gcc gcc-c++ zlib-devel perl make m4 libcurl libcurl-devel libtiff libtiff-devel lapack perl-CPAN perl-XML-Simple perl-XML-SAX perl-Text-Table perl-Regexp-Common perl-Clone perl-Sys-CPU
     ln -s /usr/lib64/libblas.so.3 /usr/lib64/libblas.so
     ln -s /usr/lib64/liblapack.so.3 /usr/lib64/liblapack.so
 
