@@ -144,5 +144,6 @@ From: fedora:27
     hg clone https://bitbucket.org/galacticusdev/galacticus
     hg clone https://bitbucket.org/galacticusdev/datasets
     cd galacticus
-    make -j60 GALACTICUS_BUILD_OPTION=MPI Galacticus.exe
+    # Disable OFD locks during the build as we may run on a host machine with a kernel that does not support them.
+    make -j60 OFDLOCKS=disabled GALACTICUS_BUILD_OPTION=MPI Galacticus.exe
     
