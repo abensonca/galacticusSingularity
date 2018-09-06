@@ -1,0 +1,148 @@
+
+
+Bootstrap: docker
+From: fedora:27
+
+%labels
+     ABOUTME Galacticus current environment based on Fedora
+
+%environment
+    export LC_ALL=C
+    export PATH=.:/usr/local/bin:/opt/galacticus:$PATH
+    export LD_LIBRARY_PATH=.:/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH
+    export GALACTICUS_EXEC_PATH=/opt/galacticus
+    export GALACTICUS_DATA_PATH=/opt/datasets
+
+    alias ll='/bin/ls -ltrsF --time-style=+"%b %d %Y %H:%M:%S"'
+
+%runscript
+    exec /bin/bash "$@"	
+
+%post
+    yum -y install which file emacs xterm wget findutils patch mercurial git svn bzip2 gcc gcc-c++ zlib-devel perl make m4 libcurl libcurl-devel libtiff libtiff-devel install lapack perl-CPAN perl-XML-Simple perl-XML-SAX perl-Text-Table perl-Regexp-Common perl-Clone perl-Sys-CPU
+    ln -s /usr/lib64/libblas.so.3 /usr/lib64/libblas.so
+    ln -s /usr/lib64/liblapack.so.3 /usr/lib64/liblapack.so
+
+    cd /tmp
+    wget ftp://ftp.gnu.org/gnu/gcc/gcc-8.2.0/gcc-8.2.0.tar.gz
+    tar xvfz gcc-8.2.0.tar.gz
+    rm gcc-8.2.0.tar.gz
+    cd gcc-8.2.0 
+    ./contrib/download_prerequisites
+    sed -i~ -r s/"gfc_internal_error \(\"new_symbol\(\): Symbol name too long\"\);"/"printf \(\"new_symbol\(\): Symbol name too long\"\);"/ gcc/fortran/symbol.c
+    cd ..
+    mkdir gcc-build
+    cd gcc-build
+    ../gcc-8.2.0/configure --prefix=/usr/local --disable-multilib --enable-languages=c,c++,fortran,lto --disable-bootstrap
+    make -j60
+    make install
+    cd /tmp
+    rm -rf gcc-8.2.0 gcc-build
+
+    export PATH=.:/usr/local/bin:$PATH
+    export LD_LIBRARY_PATH=.:/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH
+
+    cd /tmp
+    wget http://mirror.rit.edu/gnu/gsl/gsl-1.15.tar.gz
+    tar -vxzf gsl-1.15.tar.gz
+    cd gsl-1.15
+    ./configure 
+    make -j60
+    make check
+    make install
+    cd /tmp
+    rm -rf gsl-1.15*
+
+    cd /tmp
+    curl -L -o fox-4.1.0.tar.gz https://github.com/andreww/fox/archive/4.1.0.tar.gz
+    tar -vxzf fox-4.1.0.tar.gz
+    cd fox-4.1.0
+    FC=gfortran ./configure
+    make -j60
+    make check
+    make install
+    cd /tmp
+    rm -rf fox-4.1.0*
+
+    cd /tmp
+    wget https://www.lrz.de/services/software/mathematik/gsl/fortran/download/fgsl-0.9.4.tar.gz
+    tar -vxzf fgsl-0.9.4.tar.gz
+    cd fgsl-0.9.4
+    ./configure --gsl /usr/local --f90 gfortran
+    make -j60
+    make install
+    cd /tmp
+    rm -rf fgsl-0.9.4*
+
+    cd /tmp
+    wget http://www.fftw.org/fftw-3.3.4.tar.gz
+    tar -vxzf fftw-3.3.4.tar.gz
+    cd fftw-3.3.4
+    ./configure
+    make -j60
+    make install
+    cd /tmp
+    rm -rf fftw-3.3.4*
+
+    cd /tmp
+    wget https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.20/src/hdf5-1.8.20.tar.gz
+    tar -vxzf hdf5-1.8.20.tar.gz
+    cd hdf5-1.8.20
+    F9X=gfortran ./configure --prefix=/usr/local --enable-fortran --enable-production
+    make -j60
+    make install
+    cd /tmp
+    rm -rf hdf5-1.8.20*
+
+    cd /tmp
+    wget https://download.open-mpi.org/release/open-mpi/v3.1/openmpi-3.1.0.tar.bz2
+    tar -vxjf openmpi-3.1.0.tar.bz2
+    cd openmpi-3.1.0
+    ./configure --enable-mpi-thread-multiple --disable-dlopen
+    make -j60
+    make install
+    cd /tmp
+    rm -rf openmpi-3.1.0*
+
+    cd /tmp
+    wget http://www.cs.umd.edu/~mount/ANN/Files/1.1.2/ann_1.1.2.tar.gz
+    tar -vxzf ann_1.1.2.tar.gz
+    cd ann_1.1.2
+    make linux-g++
+    cp -rp include/* /usr/local/include
+    cp -rp lib/* /usr/local/lib
+    cd /tmp
+    rm -rf ann_1.1.2*
+
+    export PERL_MM_USE_DEFAULT=1
+
+
+    # Do this module manually as its unit tests are broken, so install via CPAN fails.
+    cd /tmp
+    wget https://cpan.metacpan.org/authors/id/K/KS/KSTEPHENS/Data-Match-0.06.tar.gz
+    tar xvfz Data-Match-0.06.tar.gz
+    cd Data-Match-0.06
+    perl Makefile.PL
+    make
+    make install
+    cd /tmp
+    rm -rf Data-Match-0.06*
+
+    perl -MCPAN -e 'install List::Uniq'
+    perl -MCPAN -e 'install DateTime'
+    perl -MCPAN -e 'install File::Slurp'
+    perl -MCPAN -e "install Sort::Topological"
+    perl -MCPAN -e "install LaTeX::Encode"
+    perl -MCPAN -e 'install XML::Validator::Schema'
+    perl -MCPAN -e 'install NestedMap'
+    perl -MCPAN -e 'install Text::Template'
+    perl -MCPAN -e 'install Sub::Identify'
+
+    export GALACTICUS_EXEC_PATH=/opt/galacticus
+    export GALACTICUS_DATA_PATH=/opt/datasets
+    cd /opt
+    hg clone https://bitbucket.org/galacticusdev/galacticus
+    hg clone https://bitbucket.org/galacticusdev/datasets
+    cd galacticus
+    make -j60 GALACTICUS_BUILD_OPTION=MPI Galacticus.exe
+    
